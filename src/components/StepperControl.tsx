@@ -53,15 +53,26 @@ const defaultFormater = (value?: string, defaultValue: string = '0') => {
 }
 
 const StepperControl = React.forwardRef<StepperControlRef, StepperControlProps>((props, ref) => {
-  const { onChange, formater, precision = 1, defaultValue = 1.0, onBlur, min = 0, max } = props;
-  const [value, setValue] = React.useState<string>(`${defaultValue.toFixed(precision)}`);
+  const {
+    onChange,
+    formater,
+    precision = 1,
+    value: valueProps,
+    defaultValue = 1.0,
+    onBlur,
+    min = 0,
+    max,
+    step = 1.0
+  } = props;
+
+  const [value, setValue] = React.useState<string>(`${(valueProps || defaultValue).toFixed(precision)}`);
   const [disableDecrease, setDisableDecrease] = React.useState<boolean>(false);
   const [disableIncrease, setDisableIncrease] = React.useState<boolean>(false);
-  const prevValueThatValid = React.useRef<string>(`${defaultValue.toFixed(precision)}`);
+  const prevValueThatValid = React.useRef<string>(`${(valueProps || defaultValue).toFixed(precision)}`);
 
   const skipOnChange = React.useRef<boolean>(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = React.useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     const cleaned = raw
       .replace(/,/g, '.') // replace all ',' with '.'
@@ -71,29 +82,35 @@ const StepperControl = React.forwardRef<StepperControlRef, StepperControlProps>(
       .replace(/-0/, '-') // remove leading zero after '-'
       .replace(/^0([^.\n]+)/, '$1') // remove leading zero, but keep '0' itself
     setValue(cleaned);
-  };
+  }, []);
 
-  const handleIncrease = () => {
+  const handleIncrease = React.useCallback(() => {
     setValue((prev) => {
       const num = parseFloat(prev) || 0;
-      const newValue = (num + 1).toFixed(precision)
+      const newValue = (num + step).toFixed(precision)
       if (isValid(newValue)) {
         prevValueThatValid.current = newValue
+        return newValue;
+      } else {
+        prevValueThatValid.current = `${max}`;
+        return `${max ?? prev}`
       }
-      return newValue;
     });
-  };
+  }, [step, precision, max]);
 
-  const handleDecrease = () => {
+  const handleDecrease = React.useCallback(() => {
     setValue((prev) => {
       const num = parseFloat(prev) || 0;
-      const newValue = (num - 1).toFixed(precision)
+      const newValue = (num - step).toFixed(precision)
       if (isValid(newValue)) {
         prevValueThatValid.current = newValue
+        return newValue;
+      } else {
+        prevValueThatValid.current = `${min}`;
+        return `${min ?? prev}`
       }
-      return newValue;
     });
-  };
+  }, [step, precision, min]);
 
   const isValid = React.useCallback((val: string) => {
     const num = parseFloat(val);
@@ -166,6 +183,12 @@ const StepperControl = React.forwardRef<StepperControlRef, StepperControlProps>(
   React.useEffect(() => {
     if (!skipOnChange.current) onChange?.(parseFloat(value));
   }, [value, onChange]);
+
+  React.useEffect(() => {
+    skipOnChange.current = true;
+    setValue((valueProps || defaultValue).toFixed(precision));
+    setTimeout(() => skipOnChange.current = false);
+  }, [valueProps, defaultValue, precision]);
 
   React.useEffect(() => { // if value reaches min or max, disable corresponding button
     if (approxEqual(parseFloat(value), min)) {
