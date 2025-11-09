@@ -13,8 +13,8 @@ export type UnitValueProps = {
   onChange?: (value?: UnitValueProps) => void
 }
 
-const UnitValue = (props: UnitValueProps) => {
-  const { } = props
+const UnitValue = () => {
+  // const { } = props
   const [unit, setUnit] = React.useState<'percent' | 'pixel'>('percent');
   const stepperControlRef = React.useRef<StepperControlRef>(null);
 
@@ -63,4 +63,4 @@ const UnitValue = (props: UnitValueProps) => {
   )
 }
 
-export default React.memo(UnitValue)
+export default React.memo<UnitValueProps>(UnitValue)
