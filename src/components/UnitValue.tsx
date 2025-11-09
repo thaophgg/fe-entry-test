@@ -33,9 +33,9 @@ const UnitValue = (props: UnitValueProps) => {
     }
   }, []);
 
-  const handleStepperChange = React.useCallback((value: number) => {
+  // const handleStepperChange = React.useCallback((value: number) => {
     
-  }, []);
+  // }, []);
 
   const handleStepperBlur = React.useCallback(() => {
     const stepper = stepperControlRef.current
@@ -76,7 +76,7 @@ const UnitValue = (props: UnitValueProps) => {
         <StepperControl
           value={value.value}
           ref={stepperControlRef}
-          onChange={handleStepperChange}
+          // onChange={handleStepperChange}
           onBlur={handleStepperBlur}
           min={0}
           max={value.unit === 'percent' ? 100 : Infinity}
